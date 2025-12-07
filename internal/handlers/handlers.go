@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -43,7 +42,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	w.Header().Set("Content-Type", "text-plain")
+	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	w.Write(indexFile)
 }
@@ -84,33 +83,25 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		defer out.Close()
 		// -----------------------------------------------------------------
 		// читаем и конвертируем
-		err = convertToFile(file, out)
-		if err != nil {
-			errMessage := fmt.Sprintf("error read file %s:\n", err)
-			fmt.Print(errMessage)
-			http.Error(w, errMessage, http.StatusInternalServerError)
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			s := scanner.Text()
+			str, err := service.Convert(s)
+			if err != nil {
+				errMessage := fmt.Sprintf("error read input %s:\n", err)
+				fmt.Print(errMessage)
+				http.Error(w, errMessage, http.StatusInternalServerError)
+				return
+			}
+			fmt.Fprintf(out, "%s", str)
+			w.Write([]byte(str))
 		}
 		// -----------------------------------------------------------------
 		// все ок
 		log.Printf("file %s uploaded ok\n", localFileName)
 		log.Println("file uploaded & converted")
 
-		w.Header().Set("Content-Type", "text-plain")
+		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("file uploaded & converted"))
 	}
-}
-
-// читаем через scanner и конвертируем
-func convertToFile(r io.Reader, w io.Writer) error {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		s := scanner.Text()
-		str, err := service.Convert(s)
-		if err != nil {
-			return err
-		}
-		fmt.Fprintf(w, "%s", str)
-	}
-	return nil
 }
