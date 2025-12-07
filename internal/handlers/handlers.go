@@ -83,7 +83,9 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		defer out.Close()
 		// -----------------------------------------------------------------
 		// читаем и конвертируем
+
 		scanner := bufio.NewScanner(file)
+		var output []string
 		for scanner.Scan() {
 			s := scanner.Text()
 			str, err := service.Convert(s)
@@ -94,14 +96,17 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			fmt.Fprintf(out, "%s", str)
-			w.Write([]byte(str))
+			output = append(output, str)
 		}
 		// -----------------------------------------------------------------
 		// все ок
 		log.Printf("file %s uploaded ok\n", localFileName)
 		log.Println("file uploaded & converted")
 
-		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
+		for _, r := range output {
+			w.Write([]byte(r))
+		}
 	}
 }
