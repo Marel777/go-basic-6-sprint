@@ -42,7 +42,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(indexFile)
 }
@@ -101,12 +101,13 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		// -----------------------------------------------------------------
 		// все ок
 		log.Printf("file %s uploaded ok\n", localFileName)
-		log.Println("file uploaded & converted")
+		//		log.Println("file uploaded & converted")
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		for _, r := range output {
-			w.Write([]byte(r))
+		for _, val := range output {
+			w.Write([]byte(val))
+			log.Println(val)
 		}
 	}
 }
